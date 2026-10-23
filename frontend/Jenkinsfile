@@ -2,9 +2,9 @@ pipeline {
   agent any
 
   triggers {
-    // Fires when GitHub pushes to this repo (requires the GitHub plugin
-    // and a webhook configured on the repository).
-    githubPush()
+    // Poll GitHub every 5 minutes for new commits.
+    // Use this when Jenkins is behind a firewall and cannot receive webhooks.
+    pollSCM('H/5 * * * *')
   }
 
   options {
