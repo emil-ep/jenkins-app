@@ -1,0 +1,98 @@
+pipeline {
+  agent any
+
+  triggers {
+    // Fires when GitHub pushes to this repo (requires the GitHub plugin
+    // and a webhook configured on the repository).
+    githubPush()
+  }
+
+  options {
+    timeout(time: 15, unit: 'MINUTES')
+    disableConcurrentBuilds()
+  }
+
+  tools {
+    nodejs 'NodeJS-20'   // must match the name configured in Jenkins → Global Tool Configuration
+  }
+
+  environment {
+    CI = 'true'
+  }
+
+  // Only run the pipeline when a commit lands on main or develop.
+  // For Multibranch Pipeline jobs this is evaluated against the branch
+  // being built; for standard Pipeline jobs it is evaluated against the
+  // branch reported by the SCM trigger.
+  stages {
+    stage('Branch guard') {
+      when {
+        anyOf {
+          branch 'main'
+          branch 'develop'
+        }
+      }
+      stages {
+        stage('Checkout') {
+          steps {
+            checkout scm
+          }
+        }
+
+        stage('Install') {
+          steps {
+            dir('backend') {
+              sh 'npm ci'
+            }
+          }
+        }
+
+        stage('Lint') {
+          steps {
+            dir('backend') {
+              sh 'npm run lint'
+            }
+          }
+        }
+
+        stage('Test') {
+          steps {
+            dir('backend') {
+              sh 'npm test'
+            }
+          }
+          post {
+            always {
+              // Publish JUnit results if jest-junit reporter is added in the future
+              // junit 'backend/coverage/junit.xml'
+              publishHTML(target: [
+                allowMissing: true,
+                reportDir: 'backend/coverage/lcov-report',
+                reportFiles: 'index.html',
+                reportName: 'Backend Coverage'
+              ])
+            }
+          }
+        }
+
+        stage('Build') {
+          steps {
+            dir('backend') {
+              // The backend has no compile step; validate the entry point loads cleanly
+              sh 'node -e "require(\"./src/app\")"'
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo 'Backend pipeline failed.'
+    }
+    success {
+      echo 'Backend pipeline passed.'
+    }
+  }
+}

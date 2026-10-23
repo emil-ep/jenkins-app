@@ -1,0 +1,12 @@
+{
+  "name": "jenkins-app",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "backend": "yarn workspace backend",
+    "frontend": "yarn workspace frontend"
+  }
+}

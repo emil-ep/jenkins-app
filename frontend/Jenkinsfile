@@ -1,0 +1,99 @@
+pipeline {
+  agent any
+
+  triggers {
+    // Fires when GitHub pushes to this repo (requires the GitHub plugin
+    // and a webhook configured on the repository).
+    githubPush()
+  }
+
+  options {
+    timeout(time: 20, unit: 'MINUTES')
+    disableConcurrentBuilds()
+  }
+
+  tools {
+    nodejs 'NodeJS-20'   // must match the name configured in Jenkins → Global Tool Configuration
+  }
+
+  environment {
+    CI = 'true'
+    // Prevent react-scripts from opening a browser during tests
+    BROWSER = 'none'
+  }
+
+  // Only run the pipeline when a commit lands on main or develop.
+  stages {
+    stage('Branch guard') {
+      when {
+        anyOf {
+          branch 'main'
+          branch 'develop'
+        }
+      }
+      stages {
+        stage('Checkout') {
+          steps {
+            checkout scm
+          }
+        }
+
+        stage('Install') {
+          steps {
+            dir('frontend') {
+              sh 'npm ci'
+            }
+          }
+        }
+
+        stage('Lint') {
+          steps {
+            dir('frontend') {
+              sh 'npm run lint'
+            }
+          }
+        }
+
+        stage('Test') {
+          steps {
+            dir('frontend') {
+              sh 'npm test'
+            }
+          }
+          post {
+            always {
+              publishHTML(target: [
+                allowMissing: true,
+                reportDir: 'frontend/coverage/lcov-report',
+                reportFiles: 'index.html',
+                reportName: 'Frontend Coverage'
+              ])
+            }
+          }
+        }
+
+        stage('Build') {
+          steps {
+            dir('frontend') {
+              sh 'npm run build'
+            }
+          }
+          post {
+            success {
+              archiveArtifacts artifacts: 'frontend/build/**', fingerprint: true
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo 'Frontend pipeline failed.'
+    }
+    success {
+      echo 'Frontend pipeline passed.'
+    }
+  }
+}
