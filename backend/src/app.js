@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { createStore } = require('./store');
+const logger = require('./logger');
 
 /**
  * Build the Express app with an optional pre-seeded store.
@@ -16,7 +17,7 @@ function createApp(store = createStore()) {
   // GET /api/todos — list all todos
   app.get('/api/todos', (_req, res) => {
     const todos = store.getAll();
-    console.log(`[GET] /api/todos — returning ${todos.length} item(s)`);
+    logger.info(`GET /api/todos — returning ${todos.length} item(s)`);
     res.json(todos);
   });
 
@@ -24,11 +25,11 @@ function createApp(store = createStore()) {
   app.post('/api/todos', (req, res) => {
     const { title } = req.body;
     if (!title || !String(title).trim()) {
-      console.warn('[POST] /api/todos — rejected: title is missing or blank');
+      logger.warn('POST /api/todos — rejected: title is missing or blank');
       return res.status(400).json({ error: 'title is required' });
     }
     const todo = store.create(title);
-    console.log(`[POST] /api/todos — created todo id=${todo.id} title="${todo.title}"`);
+    logger.info(`POST /api/todos — created todo id=${todo.id} title="${todo.title}"`);
     res.status(201).json(todo);
   });
 
@@ -37,10 +38,10 @@ function createApp(store = createStore()) {
     const id = parseInt(req.params.id, 10);
     const todo = store.update(id, req.body);
     if (!todo) {
-      console.warn(`[PATCH] /api/todos/${id} — not found`);
+      logger.warn(`PATCH /api/todos/${id} — not found`);
       return res.status(404).json({ error: 'not found' });
     }
-    console.log(`[PATCH] /api/todos/${id} — updated to title="${todo.title}" completed=${todo.completed}`);
+    logger.info(`PATCH /api/todos/${id} — updated to title="${todo.title}" completed=${todo.completed}`);
     res.json(todo);
   });
 
@@ -49,10 +50,10 @@ function createApp(store = createStore()) {
     const id = parseInt(req.params.id, 10);
     const removed = store.remove(id);
     if (!removed) {
-      console.warn(`[DELETE] /api/todos/${id} — not found`);
+      logger.warn(`DELETE /api/todos/${id} — not found`);
       return res.status(404).json({ error: 'not found' });
     }
-    console.log(`[DELETE] /api/todos/${id} — removed`);
+    logger.info(`DELETE /api/todos/${id} — removed`);
     res.status(204).end();
   });
 
