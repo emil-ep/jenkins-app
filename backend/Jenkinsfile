@@ -59,6 +59,22 @@ pipeline {
         }
       }
     }
+
+    stage('Deploy') {
+      steps {
+        dir('backend') {
+          sh '''
+            # Reload if process already exists, otherwise start fresh
+            if pm2 describe todo-backend > /dev/null 2>&1; then
+              pm2 restart todo-backend --update-env
+            else
+              pm2 start src/index.js --name todo-backend
+            fi
+            pm2 save
+          '''
+        }
+      }
+    }
   }
 
   post {

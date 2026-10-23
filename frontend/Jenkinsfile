@@ -61,6 +61,22 @@ pipeline {
         }
       }
     }
+
+    stage('Deploy') {
+      steps {
+        dir('frontend') {
+          sh '''
+            # Reload if process already exists, otherwise start fresh
+            if pm2 describe todo-frontend > /dev/null 2>&1; then
+              pm2 restart todo-frontend --update-env
+            else
+              pm2 serve build 3000 --name todo-frontend --spa
+            fi
+            pm2 save
+          '''
+        }
+      }
+    }
   }
 
   post {
