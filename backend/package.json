@@ -1,6 +1,6 @@
 {
   "name": "todo-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Express REST API for the Todo app",
   "main": "src/index.js",
   "scripts": {
