@@ -52,27 +52,12 @@ pipeline {
           sh 'npm test'
         }
       }
-      post {
-        always {
-          publishHTML(target: [
-            allowMissing: true,
-            reportDir: 'frontend/coverage/lcov-report',
-            reportFiles: 'index.html',
-            reportName: 'Frontend Coverage'
-          ])
-        }
-      }
     }
 
     stage('Build') {
       steps {
         dir('frontend') {
           sh 'npm run build'
-        }
-      }
-      post {
-        success {
-          archiveArtifacts artifacts: 'frontend/build/**', fingerprint: true
         }
       }
     }

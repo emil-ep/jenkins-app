@@ -49,18 +49,6 @@ pipeline {
           sh 'npm test'
         }
       }
-      post {
-        always {
-          // Publish JUnit results if jest-junit reporter is added in the future
-          // junit 'backend/coverage/junit.xml'
-          publishHTML(target: [
-            allowMissing: true,
-            reportDir: 'backend/coverage/lcov-report',
-            reportFiles: 'index.html',
-            reportName: 'Backend Coverage'
-          ])
-        }
-      }
     }
 
     stage('Build') {
