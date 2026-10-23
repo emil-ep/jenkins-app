@@ -55,7 +55,7 @@ pipeline {
       steps {
         dir('backend') {
           // The backend has no compile step; validate the entry point loads cleanly
-          sh 'node -e "require(\"./src/app\")"'
+          sh "node -e 'require(\"./src/app\")'"
         }
       }
     }
