@@ -6,6 +6,7 @@ function createStore() {
   let todos = [];
   let nextId = 1;
 
+  
   return {
     getAll() {
       return [...todos];
