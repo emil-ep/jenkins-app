@@ -60,17 +60,18 @@ pipeline {
       }
     }
 
-    stage('Deploy') {
+    stage('Backend service update') {
       steps {
+        echo "INSTANA_CD_STAGE=deploy"
         dir('backend') {
           sh '''
-            # Reload if process already exists, otherwise start fresh
-            if pm2 describe todo-backend > /dev/null 2>&1; then
-              pm2 restart todo-backend --update-env
-            else
-              pm2 start src/index.js --name todo-backend
-            fi
-            pm2 save
+            # Kill any existing backend process on port 3001
+            fuser -k 3001/tcp || true
+
+            # Start backend in background, detached from this shell
+            nohup node src/index.js > /var/lib/jenkins/logs/todo-backend.log 2>&1 &
+            echo $! > /var/lib/jenkins/pids/todo-backend.pid
+            echo "Backend started with PID $(cat /var/lib/jenkins/pids/todo-backend.pid)"
           '''
         }
       }
