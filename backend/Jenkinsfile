@@ -62,7 +62,13 @@ pipeline {
 
     stage('Backend service update') {
       steps {
+        script {
+          env.DEPLOY_VERSION = sh(script: 'node -p "require(\'./backend/package.json\').version"', returnStdout: true).trim()
+        }
         echo "INSTANA_CD_STAGE=deploy"
+        echo "INSTANA_DEPLOY_VERSION=${env.DEPLOY_VERSION}"
+        echo "INSTANA_DEPLOY_SERVICE=todo-backend"
+        echo "INSTANA_DEPLOY_ENVIRONMENT=production"
         dir('backend') {
           sh '''
             # Kill any existing backend process on port 3001
